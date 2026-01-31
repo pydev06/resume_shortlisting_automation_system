@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0, "frontend")
+
 import streamlit as st
 
 # Page configuration

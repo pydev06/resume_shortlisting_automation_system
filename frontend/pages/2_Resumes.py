@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append("..")
+sys.path.insert(0, "frontend")
 
 from api_client import api_client
 import streamlit as st

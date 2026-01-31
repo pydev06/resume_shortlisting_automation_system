@@ -1,7 +1,7 @@
 import time
 import sys
 
-sys.path.append("..")
+sys.path.insert(0, "frontend")
 
 import streamlit as st
 from api_client import api_client
