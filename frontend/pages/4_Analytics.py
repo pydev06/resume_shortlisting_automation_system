@@ -100,9 +100,11 @@ try:
                         'Not OK': not_ok_count,
                         'Pending': pending_count
                     }
-                    fig, ax = plt.subplots()
-                    ax.pie(status_counts.values(), labels=status_counts.keys(), autopct='%1.1f%%')
-                    ax.set_title('Candidate Status')
+                    fig, ax = plt.subplots(figsize=(6, 6))
+                    explode = [0.05] * len(status_counts)  # Separate slices slightly
+                    ax.pie(status_counts.values(), labels=status_counts.keys(), autopct='%1.1f%%', explode=explode, startangle=90)
+                    ax.axis('equal')  # Equal aspect ratio ensures pie is drawn as a circle
+                    plt.tight_layout()
                     st.pyplot(fig)
                 
                 with col2:

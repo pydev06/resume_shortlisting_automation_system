@@ -84,6 +84,10 @@ if "current_page" not in st.session_state:
     st.session_state.current_page = "evaluations"
 if "selected_job" not in st.session_state:
     st.session_state.selected_job = None
+if "export_csv" not in st.session_state:
+    st.session_state.export_csv = False
+if "csv_data" not in st.session_state:
+    st.session_state.csv_data = None
 
 st.markdown('<p class="main-header">📊 Resume Evaluations</p>', unsafe_allow_html=True)
 
@@ -152,15 +156,21 @@ try:
                         'sort_by': sort_by,
                         'sort_order': sort_dir
                     })
-                    st.download_button(
-                        label="📥 Download CSV",
-                        data=csv_data,
-                        file_name=f"evaluations_{selected_job['job_id']}.csv",
-                        mime="text/csv",
-                        use_container_width=True
-                    )
+                    st.session_state.export_csv = True
+                    st.session_state.csv_data = csv_data
+                    st.success("CSV generated! Download below.")
                 except Exception as e:
                     st.error(f"Export failed: {e}")
+            
+            if st.session_state.export_csv and st.session_state.csv_data:
+                st.download_button(
+                    label="📥 Download CSV",
+                    data=st.session_state.csv_data,
+                    file_name=f"evaluations_{selected_job['job_id']}.csv",
+                    mime="text/csv",
+                    use_container_width=True,
+                    key="download_csv"
+                )
         
         # Filters
         st.markdown("### Filters")
