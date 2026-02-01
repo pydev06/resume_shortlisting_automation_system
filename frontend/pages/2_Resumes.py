@@ -51,6 +51,12 @@ st.markdown("""
     .score-high { color: #28a745; font-weight: bold; }
     .score-medium { color: #ffc107; font-weight: bold; }
     .score-low { color: #dc3545; font-weight: bold; }
+    @media (max-width: 768px) {
+        .main-header { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .metric-card { padding: 0.5rem; margin-bottom: 0.5rem; }
+        .stButton button { width: 100% !important; margin-bottom: 0.5rem; }
+        .stColumn { width: 100% !important; margin-bottom: 1rem; }
+    }
 </style>
 """, unsafe_allow_html=True)
 
