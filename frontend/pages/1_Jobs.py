@@ -1,4 +1,3 @@
-import time
 import sys
 
 sys.path.insert(0, "frontend")
@@ -127,6 +126,8 @@ with st.expander("➕ Create New Job", expanded=False):
                     result = api_client.create_job(job_title, job_description)
                     success_msg = f"Job created successfully! JOBID: {result['job_id']}"
                     st.toast(success_msg, icon="✅")
+                    # Auto-clear the form
+                    st.session_state.form_key += 1
                     # Close any open edit modal
                     st.session_state.editing_job = None
                 except Exception as e:
