@@ -13,7 +13,6 @@ st.set_page_config(
 
 # Sidebar design
 with st.sidebar:
-    st.image("https://img.icons8.com/color/48/resume.png")
     st.title("📄 Resume Shortlisting")
     st.caption("AI-Powered HR Tool v1.0")
     st.markdown("---")
