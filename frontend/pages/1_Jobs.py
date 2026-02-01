@@ -82,21 +82,12 @@ if "current_page" not in st.session_state:
     st.session_state.current_page = "jobs"
 if "selected_job" not in st.session_state:
     st.session_state.selected_job = None
-
-# Job creation form state
-if "job_title" not in st.session_state:
-    st.session_state.job_title = ""
-if "job_description" not in st.session_state:
-    st.session_state.job_description = ""
 if "form_key" not in st.session_state:
     st.session_state.form_key = 0
-if "job_success_message" not in st.session_state:
-    st.session_state.job_success_message = None
-if "job_success_timestamp" not in st.session_state:
-    st.session_state.job_success_timestamp = None
-if "upload_key" not in st.session_state:
-    st.session_state.upload_key = 0
-if "form_clear_timestamp" not in st.session_state:
+if "editing_job" not in st.session_state:
+    st.session_state.editing_job = None
+if "deleting_job" not in st.session_state:
+    st.session_state.deleting_job = None
     st.session_state.form_clear_timestamp = None
 
 # Check if form should be cleared after delay
@@ -125,9 +116,10 @@ with st.expander("➕ Create New Job", expanded=False):
                 try:
                     result = api_client.create_job(job_title, job_description)
                     success_msg = f"Job created successfully! JOBID: {result['job_id']}"
-                    st.toast(success_msg, icon="✅")
+                    st.session_state.success_msg = success_msg
                     # Auto-clear the form
                     st.session_state.form_key += 1
+                    st.rerun()
                     # Close any open edit modal
                     st.session_state.editing_job = None
                 except Exception as e:
