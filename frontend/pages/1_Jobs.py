@@ -188,6 +188,7 @@ try:
                         with btn_col2:
                             if st.button("✏️", key=f"edit_{job['job_id']}", help="Edit Job"):
                                 st.session_state.editing_job_id = job['job_id']
+                                st.experimental_rerun()
                         with btn_col3:
                             if st.button("🗑️", key=f"delete_{job['job_id']}", help="Delete Job"):
                                 st.session_state.deleting_job = job['job_id']
