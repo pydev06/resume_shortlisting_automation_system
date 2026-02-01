@@ -128,7 +128,6 @@ with st.expander("➕ Create New Job", expanded=False):
                     st.toast(success_msg, icon="✅")
                     # Auto-clear the form
                     st.session_state.form_key += 1
-                    st.rerun()
                     # Close any open edit modal
                     st.session_state.editing_job = None
                 except Exception as e:
