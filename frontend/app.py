@@ -13,6 +13,7 @@ st.set_page_config(
 
 # Sidebar design
 with st.sidebar:
+    st.image("https://img.icons8.com/color/48/resume.png")
     st.title("📄 Resume Shortlisting")
     st.caption("AI-Powered HR Tool v1.0")
     st.markdown("---")
@@ -23,6 +24,27 @@ with st.sidebar:
     st.page_link("pages/3_Evaluations.py", label="📊 Evaluations")
     st.page_link("pages/4_Analytics.py", label="📈 Analytics")
     st.markdown("---")
+    
+    # Delete confirmation popup in sidebar
+    if "deleting_job" in st.session_state and st.session_state.deleting_job:
+        st.markdown("### Confirm Delete")
+        job_id = st.session_state.deleting_job
+        st.warning(f"⚠️ Are you sure you want to delete job **{job_id}**? This will also delete all associated resumes and evaluations.")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Yes, Delete", type="primary", use_container_width=True, key="confirm_delete"):
+                try:
+                    api_client.delete_job(job_id)
+                    st.success("Job deleted successfully!")
+                    st.session_state.deleting_job = None
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Failed to delete job: {e}")
+        with col2:
+            if st.button("Cancel", use_container_width=True, key="cancel_delete"):
+                st.session_state.deleting_job = None
+                st.rerun()
+        st.markdown("---")
     
     st.markdown("**System Stats:**")
     try:
