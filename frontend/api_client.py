@@ -153,6 +153,14 @@ class APIClient:
         """Re-evaluate a resume"""
         response = requests.post(f"{self.base_url}/evaluations/resume/{resume_id}/re-evaluate")
         return self._handle_response(response)
+    
+    def export_evaluations_csv(self, job_id: str, filters: Dict[str, Any]) -> bytes:
+        """Export evaluations to CSV"""
+        params = {k: v for k, v in filters.items() if v is not None and v != ''}
+        response = requests.get(f"{self.base_url}/evaluations/export/{job_id}/csv", params=params)
+        if response.status_code != 200:
+            raise Exception(f"Export failed: {response.status_code}")
+        return response.content
 
 
 # Singleton instance

@@ -131,6 +131,31 @@ try:
                     except Exception as e:
                         st.error(f"Evaluation failed: {e}")
         
+        # Export to CSV
+        with col2:
+            if st.button("📊 Export to CSV", use_container_width=True):
+                try:
+                    csv_data = api_client.export_evaluations_csv(selected_job['job_id'], {
+                        'status': status_param,
+                        'min_score': min_score if min_score > 0 else None,
+                        'max_score': max_score if max_score < 100 else None,
+                        'min_experience': min_experience if min_experience > 0 else None,
+                        'max_experience': max_experience if max_experience < 50 else None,
+                        'skills_keyword': skills_keyword,
+                        'education_keyword': education_keyword,
+                        'sort_by': sort_by,
+                        'sort_order': sort_dir
+                    })
+                    st.download_button(
+                        label="📥 Download CSV",
+                        data=csv_data,
+                        file_name=f"evaluations_{selected_job['job_id']}.csv",
+                        mime="text/csv",
+                        use_container_width=True
+                    )
+                except Exception as e:
+                    st.error(f"Export failed: {e}")
+        
         # Filters
         st.markdown("### Filters")
         with st.expander("Filter Options", expanded=True):

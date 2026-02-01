@@ -1,10 +1,14 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Response
 from typing import Optional
 from ..models.schemas import (
     EvaluationResponse, EvaluationListResponse, EvaluationSummary,
     EvaluationStatus, EvaluationFilterParams
 )
 from ..services import evaluation_service
+import csv
+import io
+import csv
+import io
 
 router = APIRouter(prefix="/evaluations", tags=["Evaluations"])
 
@@ -84,3 +88,71 @@ async def re_evaluate_resume(resume_id: int):
         return await evaluation_service.re_evaluate_resume(resume_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/export/{job_id}/csv")
+async def export_evaluations_csv(
+    job_id: str,
+    status: Optional[EvaluationStatus] = Query(None),
+    min_score: Optional[float] = Query(None, ge=0, le=100),
+    max_score: Optional[float] = Query(None, ge=0, le=100),
+    min_experience: Optional[float] = Query(None, ge=0),
+    max_experience: Optional[float] = Query(None, ge=0),
+    skills_keyword: Optional[str] = Query(None),
+    education_keyword: Optional[str] = Query(None),
+    sort_by: str = Query("match_score", pattern="^(match_score|evaluated_at|candidate_name|experience_years)$"),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$")
+):
+    """Export filtered evaluations to CSV for ATS integration"""
+    filters = EvaluationFilterParams(
+        status=status,
+        min_score=min_score,
+        max_score=max_score,
+        min_experience=min_experience,
+        max_experience=max_experience,
+        skills_keyword=skills_keyword,
+        education_keyword=education_keyword,
+        sort_by=sort_by,
+        sort_order=sort_order
+    )
+    
+    try:
+        result = await evaluation_service.list_evaluations(job_id, filters)
+        evaluations = result.evaluations
+        
+        # Create CSV
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Header
+        writer.writerow([
+            'Candidate Name', 'File Name', 'Match Score (%)', 'Status', 
+            'Experience (years)', 'Education', 'Skills', 'Previous Roles', 
+            'Justification', 'Evaluated At'
+        ])
+        
+        # Rows
+        for eval in evaluations:
+            writer.writerow([
+                eval.candidate_name or '',
+                eval.file_name,
+                eval.match_score,
+                eval.status,
+                eval.experience_years or '',
+                eval.education or '',
+                ', '.join(eval.skills_extracted or []),
+                ', '.join(eval.previous_roles or []),
+                eval.justification,
+                eval.evaluated_at.isoformat() if eval.evaluated_at else ''
+            ])
+        
+        csv_content = output.getvalue()
+        output.close()
+        
+        return Response(
+            content=csv_content,
+            media_type='text/csv',
+            headers={"Content-Disposition": f"attachment; filename=evaluations_{job_id}.csv"}
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
