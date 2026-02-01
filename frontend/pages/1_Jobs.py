@@ -88,12 +88,11 @@ if "editing_job" not in st.session_state:
     st.session_state.editing_job = None
 if "deleting_job" not in st.session_state:
     st.session_state.deleting_job = None
-    st.session_state.form_clear_timestamp = None
 
-# Check if form should be cleared after delay
-if st.session_state.form_clear_timestamp and time.time() - st.session_state.form_clear_timestamp > 3:
-    st.session_state.form_key += 1
-    st.session_state.form_clear_timestamp = None
+# Show success toast if set
+if "success_msg" in st.session_state and st.session_state.success_msg:
+    st.success(st.session_state.success_msg)
+    st.session_state.success_msg = None
 
 st.markdown('<p class="main-header">📋 Job Management</p>', unsafe_allow_html=True)
 
@@ -124,15 +123,6 @@ with st.expander("➕ Create New Job", expanded=False):
                     st.session_state.editing_job = None
                 except Exception as e:
                     st.error(f"Failed to create job: {e}")
-
-# Show success message outside expander
-if st.session_state.job_success_message and st.session_state.job_success_timestamp:
-    elapsed = time.time() - st.session_state.job_success_timestamp
-    if elapsed <= 3:
-        st.success(st.session_state.job_success_message)
-    else:
-        st.session_state.job_success_message = None
-        st.session_state.job_success_timestamp = None
 
 # Search and List Jobs
 col1, col2 = st.columns([3, 1])
