@@ -128,15 +128,11 @@ with st.expander("➕ Create New Job", expanded=False):
                     st.toast(success_msg, icon="✅")
                     # Auto-clear the form
                     st.session_state.form_key += 1
+                    st.rerun()
                     # Close any open edit modal
                     st.session_state.editing_job = None
                 except Exception as e:
                     st.error(f"Failed to create job: {e}")
-
-# Clear form button outside the form
-if st.button("🧹 Clear Form", use_container_width=True):
-    st.session_state.form_key += 1
-    st.rerun()
 
 # Show success message outside expander
 if st.session_state.job_success_message and st.session_state.job_success_timestamp:
