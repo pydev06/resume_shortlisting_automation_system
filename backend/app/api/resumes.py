@@ -1,6 +1,8 @@
 from typing import List
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Response
+from zipfile import ZipFile
+from io import BytesIO
 
 from ..models.schemas import ResumeResponse, ResumeListResponse
 from ..services import resume_service
@@ -61,6 +63,42 @@ async def upload_multiple_resumes(job_id: str, files: List[UploadFile] = File(..
             file_data.append((content, file.filename))
         
         return await resume_service.upload_multiple_resumes(job_id, file_data)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/{job_id}/upload-zip", response_model=List[ResumeResponse], status_code=201)
+async def upload_zip_resumes(job_id: str, file: UploadFile = File(...)):
+    """Upload multiple resumes from a ZIP file"""
+    if not file.filename or not file.filename.lower().endswith('.zip'):
+        raise HTTPException(status_code=400, detail="File must be a ZIP archive")
+    
+    try:
+        content = await file.read()
+        zip_size_limit = 50 * 1024 * 1024  # 50MB for ZIP
+        if len(content) > zip_size_limit:
+            raise HTTPException(status_code=400, detail="ZIP file too large. Max size: 50MB")
+        
+        resumes = []
+        with ZipFile(BytesIO(content)) as zip_file:
+            for name in zip_file.namelist():
+                if name.lower().endswith(('.pdf', '.docx')):
+                    try:
+                        with zip_file.open(name) as f:
+                            file_content = f.read()
+                            if len(file_content) > MAX_FILE_SIZE:
+                                continue  # Skip large files
+                            
+                            resume = await resume_service.upload_resume(job_id, file_content, name)
+                            resumes.append(resume)
+                    except Exception as e:
+                        # Log error and continue with other files
+                        continue
+        
+        if not resumes:
+            raise HTTPException(status_code=400, detail="No valid PDF/DOCX files found in ZIP")
+        
+        return resumes
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

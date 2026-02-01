@@ -79,6 +79,12 @@ class APIClient:
         response = requests.post(f"{self.base_url}/resumes/{job_id}/upload-multiple", files=file_list)
         return self._handle_response(response)
     
+    def upload_zip_resumes(self, job_id: str, file) -> List[Dict[str, Any]]:
+        """Upload multiple resumes from a ZIP file"""
+        files = {"file": (file.name, file.getvalue(), file.type)}
+        response = requests.post(f"{self.base_url}/resumes/{job_id}/upload-zip", files=files)
+        return self._handle_response(response)
+    
     def list_resumes(self, job_id: str) -> Dict[str, Any]:
         """List all resumes for a job"""
         response = requests.get(f"{self.base_url}/resumes/{job_id}")

@@ -128,6 +128,24 @@ try:
             st.session_state.upload_key += 1
             st.rerun()
         
+        # ZIP Upload Section
+        with st.expander("📦 Upload ZIP Archive", expanded=False):
+            zip_file = st.file_uploader(
+                "Upload ZIP containing resumes (PDF/DOCX only)",
+                type=["zip"],
+                key="zip_uploader"
+            )
+            
+            if zip_file and st.button("Upload from ZIP", type="primary", use_container_width=True):
+                with st.spinner("Extracting and uploading resumes from ZIP..."):
+                    try:
+                        result = api_client.upload_zip_resumes(selected_job['job_id'], zip_file)
+                        st.toast(f"Successfully uploaded {len(result)} resumes from ZIP!", icon="✅")
+                        st.session_state.upload_key += 1
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Upload failed: {str(e)}")
+        
         st.markdown("---")
         
         # List Resumes
