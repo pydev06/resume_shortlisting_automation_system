@@ -129,49 +129,6 @@ try:
         
         st.markdown("---")
         
-        # Evaluate button
-        col1, col2 = st.columns([1, 3])
-        with col1:
-            if st.button("🔄 Evaluate All Resumes", type="primary", use_container_width=True):
-                with st.spinner("Evaluating resumes... This may take a while."):
-                    try:
-                        results = api_client.evaluate_all_resumes(selected_job['job_id'])
-                        st.success(f"✅ Evaluated {len(results)} resumes")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Evaluation failed: {e}")
-        
-        # Export to CSV
-        with col2:
-            if st.button("📊 Export to CSV", use_container_width=True):
-                try:
-                    csv_data = api_client.export_evaluations_csv(selected_job['job_id'], {
-                        'status': status_param,
-                        'min_score': min_score if min_score > 0 else None,
-                        'max_score': max_score if max_score < 100 else None,
-                        'min_experience': min_experience if min_experience > 0 else None,
-                        'max_experience': max_experience if max_experience < 50 else None,
-                        'skills_keyword': skills_keyword,
-                        'education_keyword': education_keyword,
-                        'sort_by': sort_by,
-                        'sort_order': sort_dir
-                    })
-                    st.session_state.export_csv = True
-                    st.session_state.csv_data = csv_data
-                    st.success("CSV generated! Download below.")
-                except Exception as e:
-                    st.error(f"Export failed: {e}")
-            
-            if st.session_state.export_csv and st.session_state.csv_data:
-                st.download_button(
-                    label="📥 Download CSV",
-                    data=st.session_state.csv_data,
-                    file_name=f"evaluations_{selected_job['job_id']}.csv",
-                    mime="text/csv",
-                    use_container_width=True,
-                    key="download_csv"
-                )
-        
         # Filters
         st.markdown("### Filters")
         with st.expander("Filter Options", expanded=True):
@@ -211,6 +168,52 @@ try:
         elif sort_order == "Experience (Low to High)":
             sort_by = "experience_years"
             sort_dir = "asc"
+        
+        # Evaluate button
+        col1, col2 = st.columns([1, 3])
+        with col1:
+            if st.button("🔄 Evaluate All Resumes", type="primary", use_container_width=True):
+                with st.spinner("Evaluating resumes... This may take a while."):
+                    try:
+                        results = api_client.evaluate_all_resumes(selected_job['job_id'])
+                        st.success(f"✅ Evaluated {len(results)} resumes")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Evaluation failed: {e}")
+        
+        # Export to CSV
+        with col2:
+            if st.button("📊 Export to CSV", use_container_width=True):
+                try:
+                    status_param = None if status_filter == "All" else status_filter
+                    csv_data = api_client.export_evaluations_csv(selected_job['job_id'], {
+                        'status': status_param,
+                        'min_score': min_score if min_score > 0 else None,
+                        'max_score': max_score if max_score < 100 else None,
+                        'min_experience': min_experience if min_experience > 0 else None,
+                        'max_experience': max_experience if max_experience < 50 else None,
+                        'skills_keyword': skills_keyword,
+                        'education_keyword': education_keyword,
+                        'sort_by': sort_by,
+                        'sort_order': sort_dir
+                    })
+                    st.session_state.export_csv = True
+                    st.session_state.csv_data = csv_data
+                    st.success("CSV generated! Download below.")
+                except Exception as e:
+                    st.error(f"Export failed: {e}")
+            
+            if st.session_state.export_csv and st.session_state.csv_data:
+                st.download_button(
+                    label="📥 Download CSV",
+                    data=st.session_state.csv_data,
+                    file_name=f"evaluations_{selected_job['job_id']}.csv",
+                    mime="text/csv",
+                    use_container_width=True,
+                    key="download_csv"
+                )
+        
+        st.markdown("---")
         
         # List evaluations
         try:
