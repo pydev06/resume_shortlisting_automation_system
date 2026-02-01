@@ -178,8 +178,7 @@ try:
                     with btn_col1:
                         if st.button("📁", key=f"resumes_{job['job_id']}", help="View Resumes"):
                             st.session_state.selected_job = job
-                            st.session_state.current_page = "resumes"
-                            st.rerun()
+                            st.switch_page("pages/2_Resumes.py")
                     with btn_col2:
                         if st.button("✏️", key=f"edit_{job['job_id']}", help="Edit Job"):
                             st.session_state.editing_job = job
