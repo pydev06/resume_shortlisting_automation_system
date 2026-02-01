@@ -143,7 +143,7 @@ try:
         
         for job in jobs:
             with st.container():
-                if st.session_state.get("editing_job") == job:
+                if st.session_state.get("editing_job_id") == job['job_id']:
                     # Edit mode
                     col1, col2 = st.columns([1, 3])
                     with col1:
@@ -160,13 +160,13 @@ try:
                                 try:
                                     api_client.update_job(job['job_id'], title=new_title, description=new_desc)
                                     st.success("Job updated successfully!")
-                                    st.session_state.editing_job = None
+                                    st.session_state.editing_job_id = None
                                     st.rerun()
                                 except Exception as e:
                                     st.error(f"Failed to update job: {e}")
                         with cancel_col:
                             if st.button("Cancel", key=f"cancel_{job['job_id']}", use_container_width=True):
-                                st.session_state.editing_job = None
+                                st.session_state.editing_job_id = None
                                 st.rerun()
                 else:
                     # Normal view
@@ -187,7 +187,7 @@ try:
                                 st.switch_page("pages/2_Resumes.py")
                         with btn_col2:
                             if st.button("✏️", key=f"edit_{job['job_id']}", help="Edit Job"):
-                                st.session_state.editing_job = job
+                                st.session_state.editing_job_id = job['job_id']
                         with btn_col3:
                             if st.button("🗑️", key=f"delete_{job['job_id']}", help="Delete Job"):
                                 st.session_state.deleting_job = job['job_id']
