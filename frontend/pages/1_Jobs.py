@@ -214,7 +214,23 @@ try:
                                 st.rerun()
                         with btn_col3:
                             if st.button("🗑️", key=f"delete_{job['job_id']}", help="Delete Job"):
-                                st.session_state.deleting_job = job['job_id']
+                                @st.dialog("Confirm Delete")
+                                def confirm_delete():
+                                    st.warning(f"⚠️ Are you sure you want to delete job **{job['job_id']}**? This will also delete all associated resumes and evaluations.")
+                                    col1, col2 = st.columns(2)
+                                    with col1:
+                                        if st.button("Yes, Delete", type="primary", use_container_width=True):
+                                            try:
+                                                api_client.delete_job(job['job_id'])
+                                                st.success("Job deleted successfully!")
+                                                st.rerun()
+                                            except Exception as e:
+                                                st.error(f"Failed to delete job: {e}")
+                                    with col2:
+                                        if st.button("Cancel", use_container_width=True):
+                                            st.rerun()
+                                
+                                confirm_delete()
                 
                 st.markdown("---")
         
