@@ -85,10 +85,14 @@ if "selected_job" not in st.session_state:
     st.session_state.selected_job = None
 if "form_key" not in st.session_state:
     st.session_state.form_key = 0
-if "editing_job" not in st.session_state:
-    st.session_state.editing_job = None
+if "editing_job_id" not in st.session_state:
+    st.session_state.editing_job_id = None
 if "deleting_job" not in st.session_state:
     st.session_state.deleting_job = None
+if "job_success_message" not in st.session_state:
+    st.session_state.job_success_message = None
+if "job_success_timestamp" not in st.session_state:
+    st.session_state.job_success_timestamp = None
 
 # Show success toast if set
 if "success_msg" in st.session_state and st.session_state.success_msg:
@@ -188,7 +192,7 @@ try:
                         with btn_col2:
                             if st.button("✏️", key=f"edit_{job['job_id']}", help="Edit Job"):
                                 st.session_state.editing_job_id = job['job_id']
-                                st.experimental_rerun()
+                                st.rerun()
                         with btn_col3:
                             if st.button("🗑️", key=f"delete_{job['job_id']}", help="Delete Job"):
                                 st.session_state.deleting_job = job['job_id']
