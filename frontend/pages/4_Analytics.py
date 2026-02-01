@@ -102,8 +102,9 @@ try:
                     }
                     fig, ax = plt.subplots(figsize=(6, 6))
                     explode = [0.05] * len(status_counts)  # Separate slices slightly
-                    ax.pie(status_counts.values(), labels=status_counts.keys(), autopct='%1.1f%%', explode=explode, startangle=90)
+                    ax.pie(status_counts.values(), autopct='%1.1f%%', explode=explode, startangle=90)
                     ax.axis('equal')  # Equal aspect ratio ensures pie is drawn as a circle
+                    ax.legend(status_counts.keys(), loc="center left", bbox_to_anchor=(1, 0.5))
                     plt.tight_layout()
                     st.pyplot(fig)
                 
