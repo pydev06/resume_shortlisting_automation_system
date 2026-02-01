@@ -143,53 +143,56 @@ try:
         
         for job in jobs:
             with st.container():
-                col1, col2, col3 = st.columns([1, 4, 2])
-                
-                with col1:
-                    st.markdown(f"**`{job['job_id']}`**")
-                
-                with col2:
-                    st.markdown(f"**{job['title']}**")
-                    st.caption(f"Created: {job['created_at'][:10]}")
-                
-                with col3:
-                    btn_col1, btn_col2, btn_col3 = st.columns(3)
-                    with btn_col1:
-                        if st.button("📁", key=f"resumes_{job['job_id']}", help="View Resumes"):
-                            st.session_state.selected_job = job
-                            st.switch_page("pages/2_Resumes.py")
-                    with btn_col2:
-                        if st.button("✏️", key=f"edit_{job['job_id']}", help="Edit Job"):
-                            st.session_state.editing_job = job
-                    with btn_col3:
-                        if st.button("🗑️", key=f"delete_{job['job_id']}", help="Delete Job"):
-                            st.session_state.deleting_job = job['job_id']
+                if st.session_state.get("editing_job") == job:
+                    # Edit mode
+                    col1, col2 = st.columns([1, 3])
+                    with col1:
+                        st.markdown(f"**`{job['job_id']}`**")
+                    with col2:
+                        new_title = st.text_input("Title", value=job['title'], key=f"title_{job['job_id']}")
+                        new_desc = st.text_area("Description", value=job['description'], key=f"desc_{job['job_id']}", height=100)
+                    
+                    col3 = st.columns(1)[0]
+                    with col3:
+                        save_col, cancel_col = st.columns(2)
+                        with save_col:
+                            if st.button("Save", key=f"save_{job['job_id']}", use_container_width=True):
+                                try:
+                                    api_client.update_job(job['job_id'], title=new_title, description=new_desc)
+                                    st.success("Job updated successfully!")
+                                    st.session_state.editing_job = None
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Failed to update job: {e}")
+                        with cancel_col:
+                            if st.button("Cancel", key=f"cancel_{job['job_id']}", use_container_width=True):
+                                st.session_state.editing_job = None
+                                st.rerun()
+                else:
+                    # Normal view
+                    col1, col2, col3 = st.columns([1, 4, 2])
+                    
+                    with col1:
+                        st.markdown(f"**`{job['job_id']}`**")
+                    
+                    with col2:
+                        st.markdown(f"**{job['title']}**")
+                        st.caption(f"Created: {job['created_at'][:10]}")
+                    
+                    with col3:
+                        btn_col1, btn_col2, btn_col3 = st.columns(3)
+                        with btn_col1:
+                            if st.button("📁", key=f"resumes_{job['job_id']}", help="View Resumes"):
+                                st.session_state.selected_job = job
+                                st.switch_page("pages/2_Resumes.py")
+                        with btn_col2:
+                            if st.button("✏️", key=f"edit_{job['job_id']}", help="Edit Job"):
+                                st.session_state.editing_job = job
+                        with btn_col3:
+                            if st.button("🗑️", key=f"delete_{job['job_id']}", help="Delete Job"):
+                                st.session_state.deleting_job = job['job_id']
                 
                 st.markdown("---")
-        
-        # Handle edit modal
-        if "editing_job" in st.session_state and st.session_state.editing_job:
-            job = st.session_state.editing_job
-            st.markdown(f"### Edit Job: {job['job_id']}")
-            new_title = st.text_input("Job Title", value=job['title'], key=f"edit_title_{job['job_id']}")
-            new_description = st.text_area("Job Description", value=job['description'], height=200, key=f"edit_desc_{job['job_id']}")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("Save Changes", key=f"save_{job['job_id']}", use_container_width=True):
-                    try:
-                        api_client.update_job(job['job_id'], title=new_title, description=new_description)
-                        st.success("Job updated successfully!")
-                        st.session_state.editing_job = None
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Failed to update job: {e}")
-            with col2:
-                if st.button("Cancel", key=f"cancel_{job['job_id']}", use_container_width=True):
-                    st.session_state.editing_job = None
-                    st.rerun()
-            
-            st.markdown("---")
         
         # Handle delete confirmation
         if "deleting_job" in st.session_state and st.session_state.deleting_job:
