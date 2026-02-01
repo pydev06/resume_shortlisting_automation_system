@@ -32,7 +32,7 @@ with st.sidebar:
         st.warning(f"⚠️ Are you sure you want to delete job **{job_id}**? This will also delete all associated resumes and evaluations.")
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("Yes, Delete", type="primary", use_container_width=True, key="confirm_delete"):
+            if st.button("Yes, Delete", type="primary", use_container_width=True, key=f"confirm_{job_id}"):
                 try:
                     api_client.delete_job(job_id)
                     st.success("Job deleted successfully!")
@@ -41,7 +41,7 @@ with st.sidebar:
                 except Exception as e:
                     st.error(f"Failed to delete job: {e}")
         with col2:
-            if st.button("Cancel", use_container_width=True, key="cancel_delete"):
+            if st.button("Cancel", use_container_width=True, key=f"cancel_{job_id}"):
                 st.session_state.deleting_job = None
                 st.rerun()
         st.markdown("---")
