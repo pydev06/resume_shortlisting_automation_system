@@ -167,21 +167,29 @@ try:
                 
                 st.markdown("---")
         
-                
-                col1, col2 = st.columns(2)
-                with col1:
-                    if st.form_submit_button("Save Changes", use_container_width=True):
-                        try:
-                            api_client.update_job(job['job_id'], title=new_title, description=new_description)
-                            st.success("Job updated successfully!")
-                            st.session_state.editing_job = None
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Failed to update job: {e}")
-                with col2:
-                    if st.form_submit_button("Cancel", use_container_width=True):
+        # Handle edit modal
+        if "editing_job" in st.session_state and st.session_state.editing_job:
+            job = st.session_state.editing_job
+            st.markdown(f"### Edit Job: {job['job_id']}")
+            new_title = st.text_input("Job Title", value=job['title'], key=f"edit_title_{job['job_id']}")
+            new_description = st.text_area("Job Description", value=job['description'], height=200, key=f"edit_desc_{job['job_id']}")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("Save Changes", key=f"save_{job['job_id']}", use_container_width=True):
+                    try:
+                        api_client.update_job(job['job_id'], title=new_title, description=new_description)
+                        st.success("Job updated successfully!")
                         st.session_state.editing_job = None
                         st.rerun()
+                    except Exception as e:
+                        st.error(f"Failed to update job: {e}")
+            with col2:
+                if st.button("Cancel", key=f"cancel_{job['job_id']}", use_container_width=True):
+                    st.session_state.editing_job = None
+                    st.rerun()
+            
+            st.markdown("---")
         
         # Handle delete confirmation
         if "deleting_job" in st.session_state and st.session_state.deleting_job:
