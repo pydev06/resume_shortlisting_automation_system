@@ -176,6 +176,10 @@ async def list_evaluations(
             query = query.gte("match_score", filters.min_score)
         if filters.max_score is not None:
             query = query.lte("match_score", filters.max_score)
+        if filters.min_experience is not None:
+            query = query.gte("experience_years", filters.min_experience)
+        if filters.max_experience is not None:
+            query = query.lte("experience_years", filters.max_experience)
         
         # Apply sorting
         desc = filters.sort_order == "desc"
@@ -194,6 +198,21 @@ async def list_evaluations(
             candidate_name=resume.candidate_name if resume else None,
             file_name=resume.file_name if resume else "Unknown"
         ))
+    
+    # Apply keyword filters in Python (since Supabase text search on JSON is complex)
+    if filters:
+        if filters.skills_keyword:
+            keyword = filters.skills_keyword.lower()
+            evaluations = [
+                e for e in evaluations
+                if any(keyword in skill.lower() for skill in (e.skills_extracted or []))
+            ]
+        if filters.education_keyword:
+            keyword = filters.education_keyword.lower()
+            evaluations = [
+                e for e in evaluations
+                if e.education and keyword in e.education.lower()
+            ]
     
     return EvaluationListResponse(
         evaluations=evaluations,

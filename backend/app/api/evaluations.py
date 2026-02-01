@@ -33,7 +33,11 @@ async def list_evaluations(
     status: Optional[EvaluationStatus] = Query(None),
     min_score: Optional[float] = Query(None, ge=0, le=100),
     max_score: Optional[float] = Query(None, ge=0, le=100),
-    sort_by: str = Query("match_score", pattern="^(match_score|evaluated_at|candidate_name)$"),
+    min_experience: Optional[float] = Query(None, ge=0),
+    max_experience: Optional[float] = Query(None, ge=0),
+    skills_keyword: Optional[str] = Query(None),
+    education_keyword: Optional[str] = Query(None),
+    sort_by: str = Query("match_score", pattern="^(match_score|evaluated_at|candidate_name|experience_years)$"),
     sort_order: str = Query("desc", pattern="^(asc|desc)$")
 ):
     """List all evaluations for a job with optional filters"""
@@ -41,6 +45,10 @@ async def list_evaluations(
         status=status,
         min_score=min_score,
         max_score=max_score,
+        min_experience=min_experience,
+        max_experience=max_experience,
+        skills_keyword=skills_keyword,
+        education_keyword=education_keyword,
         sort_by=sort_by,
         sort_order=sort_order
     )

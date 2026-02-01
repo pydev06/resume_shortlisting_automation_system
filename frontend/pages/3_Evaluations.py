@@ -133,18 +133,29 @@ try:
         
         # Filters
         st.markdown("### Filters")
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            status_filter = st.selectbox(
-                "Status",
-                ["All", "OK to Proceed", "Not OK", "Pending"]
-            )
-        with col2:
-            min_score = st.number_input("Min Score", 0, 100, 0)
-        with col3:
-            max_score = st.number_input("Max Score", 0, 100, 100)
-        with col4:
-            sort_order = st.selectbox("Sort", ["Highest Score", "Lowest Score", "Recent"])
+        with st.expander("Filter Options", expanded=True):
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                status_filter = st.selectbox(
+                    "Status",
+                    ["All", "OK to Proceed", "Not OK", "Pending"]
+                )
+            with col2:
+                min_score = st.number_input("Min Score", 0, 100, 0)
+            with col3:
+                max_score = st.number_input("Max Score", 0, 100, 100)
+            with col4:
+                sort_order = st.selectbox("Sort", ["Highest Score", "Lowest Score", "Recent", "Experience (High to Low)", "Experience (Low to High)"])
+            
+            col5, col6, col7, col8 = st.columns(4)
+            with col5:
+                min_experience = st.number_input("Min Experience (years)", 0.0, 50.0, 0.0, 0.5)
+            with col6:
+                max_experience = st.number_input("Max Experience (years)", 0.0, 50.0, 50.0, 0.5)
+            with col7:
+                skills_keyword = st.text_input("Skills Keyword", placeholder="e.g., Python")
+            with col8:
+                education_keyword = st.text_input("Education Keyword", placeholder="e.g., Computer Science")
         
         # Map sort options
         sort_by = "match_score"
@@ -153,6 +164,12 @@ try:
             sort_dir = "asc"
         elif sort_order == "Recent":
             sort_by = "evaluated_at"
+        elif sort_order == "Experience (High to Low)":
+            sort_by = "experience_years"
+            sort_dir = "desc"
+        elif sort_order == "Experience (Low to High)":
+            sort_by = "experience_years"
+            sort_dir = "asc"
         
         # List evaluations
         try:

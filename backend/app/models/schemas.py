@@ -106,5 +106,9 @@ class EvaluationFilterParams(BaseModel):
     status: Optional[EvaluationStatus] = None
     min_score: Optional[float] = Field(None, ge=0, le=100)
     max_score: Optional[float] = Field(None, ge=0, le=100)
-    sort_by: str = Field(default="match_score", pattern="^(match_score|evaluated_at|candidate_name)$")
+    min_experience: Optional[float] = Field(None, ge=0, description="Minimum years of experience")
+    max_experience: Optional[float] = Field(None, ge=0, description="Maximum years of experience")
+    skills_keyword: Optional[str] = Field(None, description="Keyword to search in extracted skills")
+    education_keyword: Optional[str] = Field(None, description="Keyword to search in education")
+    sort_by: str = Field(default="match_score", pattern="^(match_score|evaluated_at|candidate_name|experience_years)$")
     sort_order: str = Field(default="desc", pattern="^(asc|desc)$")
