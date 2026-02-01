@@ -92,14 +92,8 @@ if "deleting_job" not in st.session_state:
 
 # Show success toast if set
 if "success_msg" in st.session_state and st.session_state.success_msg:
-    if "success_timestamp" not in st.session_state:
-        st.session_state.success_timestamp = time.time()
-    if time.time() - st.session_state.success_timestamp < 3:
-        st.success(st.session_state.success_msg)
-    else:
-        st.session_state.success_msg = None
-        if "success_timestamp" in st.session_state:
-            del st.session_state.success_timestamp
+    st.toast(st.session_state.success_msg, icon="✅")
+    st.session_state.success_msg = None
 
 st.markdown('<p class="main-header">📋 Job Management</p>', unsafe_allow_html=True)
 
