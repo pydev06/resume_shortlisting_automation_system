@@ -167,13 +167,6 @@ try:
                 
                 st.markdown("---")
         
-        # Handle edit modal
-        if "editing_job" in st.session_state and st.session_state.editing_job:
-            job = st.session_state.editing_job
-            st.markdown(f"### Edit Job: {job['job_id']}")
-            with st.form("edit_job_form"):
-                new_title = st.text_input("Job Title", value=job['title'])
-                new_description = st.text_area("Job Description", value=job['description'], height=200)
                 
                 col1, col2 = st.columns(2)
                 with col1:
