@@ -60,6 +60,14 @@ class SkillMatch(BaseModel):
     relevance_score: float = Field(..., ge=0, le=1)
 
 
+class RankingBreakdown(BaseModel):
+    experience_score: float = Field(..., ge=0, le=100, description="Experience relevance score")
+    education_score: float = Field(..., ge=0, le=100, description="Education relevance score")
+    skills_quality_score: float = Field(..., ge=0, le=100, description="Skills quality score")
+    keyword_density_score: float = Field(..., ge=0, le=100, description="Keyword density score")
+    composite_score: float = Field(..., ge=0, le=100, description="Final composite ranking score")
+
+
 class EvaluationResponse(BaseModel):
     id: int
     resume_id: int
@@ -74,6 +82,7 @@ class EvaluationResponse(BaseModel):
     experience_years: Optional[float] = None
     education: Optional[str] = None
     previous_roles: List[str] = []
+    ranking_breakdown: Optional[RankingBreakdown] = None
     evaluated_at: datetime
 
 
@@ -110,5 +119,5 @@ class EvaluationFilterParams(BaseModel):
     max_experience: Optional[float] = Field(None, ge=0, description="Maximum years of experience")
     skills_keyword: Optional[str] = Field(None, description="Keyword to search in extracted skills")
     education_keyword: Optional[str] = Field(None, description="Keyword to search in education")
-    sort_by: str = Field(default="match_score", pattern="^(match_score|evaluated_at|candidate_name|experience_years)$")
+    sort_by: str = Field(default="match_score", pattern="^(match_score|evaluated_at|candidate_name|experience_years|composite_score)$")
     sort_order: str = Field(default="desc", pattern="^(asc|desc)$")

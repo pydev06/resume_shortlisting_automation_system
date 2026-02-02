@@ -143,7 +143,7 @@ try:
             with col3:
                 max_score = st.number_input("Max Score", 0, 100, 100)
             with col4:
-                sort_order = st.selectbox("Sort", ["Highest Score", "Lowest Score", "Recent", "Experience (High to Low)", "Experience (Low to High)"])
+                sort_order = st.selectbox("Sort", ["Highest Score", "Lowest Score", "Recent", "Experience (High to Low)", "Experience (Low to High)", "Composite Score (High to Low)", "Composite Score (Low to High)"])
             
             col5, col6, col7, col8 = st.columns(4)
             with col5:
@@ -167,6 +167,12 @@ try:
             sort_dir = "desc"
         elif sort_order == "Experience (Low to High)":
             sort_by = "experience_years"
+            sort_dir = "asc"
+        elif sort_order == "Composite Score (High to Low)":
+            sort_by = "composite_score"
+            sort_dir = "desc"
+        elif sort_order == "Composite Score (Low to High)":
+            sort_by = "composite_score"
             sort_dir = "asc"
         
         # Evaluate button
@@ -250,8 +256,27 @@ try:
                             st.markdown(format_status_badge(eval_item['status']), unsafe_allow_html=True)
                         
                         with col4:
-                            if st.button("View Details", key=f"view_{eval_item['id']}"):
-                                st.session_state.viewing_eval = eval_item
+                            col4a, col4b = st.columns([1, 1])
+                            with col4a:
+                                if st.button("View Details", key=f"view_{eval_item['id']}"):
+                                    st.session_state.viewing_eval = eval_item
+                            with col4b:
+                                if st.button("🔄 Re-eval", key=f"reeval_{eval_item['id']}", help="Re-evaluate with new ranking system"):
+                                    with st.spinner("Re-evaluating..."):
+                                        try:
+                                            result = api_client.re_evaluate_resume(eval_item['resume_id'])
+                                            st.success("✅ Re-evaluated with ranking breakdown!")
+                                            st.rerun()
+                                        except Exception as e:
+                                            st.error(f"Re-evaluation failed: {e}")
+                            
+                            # Show composite score if available
+                            if eval_item.get('ranking_breakdown'):
+                                composite_score = eval_item['ranking_breakdown'].get('composite_score')
+                                if composite_score:
+                                    st.caption(f"🏆 Composite: {composite_score:.1f}%")
+                            else:
+                                st.caption("📊 No ranking data (re-evaluate to see)")
                         
                         # Show justification
                         st.caption(eval_item['justification'])
@@ -268,6 +293,16 @@ try:
                         st.markdown("### Match Score")
                         st.markdown(f"# {eval_item['match_score']:.0f}%")
                         st.markdown(format_status_badge(eval_item['status']), unsafe_allow_html=True)
+                        
+                        # Show ranking breakdown if available
+                        if eval_item.get('ranking_breakdown'):
+                            st.markdown("### Ranking Breakdown")
+                            rb = eval_item['ranking_breakdown']
+                            st.markdown(f"**🏆 Composite Score:** {rb.get('composite_score', 0):.1f}%")
+                            st.markdown(f"**💼 Experience Score:** {rb.get('experience_score', 0):.1f}%")
+                            st.markdown(f"**🎓 Education Score:** {rb.get('education_score', 0):.1f}%")
+                            st.markdown(f"**⚡ Skills Quality:** {rb.get('skills_quality_score', 0):.1f}%")
+                            st.markdown(f"**🔍 Keyword Density:** {rb.get('keyword_density_score', 0):.1f}%")
                     
                     with col2:
                         st.markdown("### Experience")
