@@ -110,15 +110,18 @@ def _calculate_experience_score(resume_skills: Dict[str, Any], job_description: 
 
 
 def _calculate_education_score(resume_skills: Dict[str, Any], job_description: str) -> float:
-    """Calculate education relevance score"""
+    """Calculate education relevance score with exact and higher degree matching"""
     education = resume_skills.get('education', '')
     if not education:
         return 0.0
     
-    education_str = str(education).lower()  # Convert to string first, then lowercase
+    education_str = str(education).lower()
     
-    # Education level scoring
-    education_levels = {
+    # Extract education requirements from job description
+    required_degree = _extract_required_degree(job_description)
+    
+    # Education level hierarchy (higher to lower)
+    education_hierarchy = {
         'phd': 100,
         'doctorate': 100,
         'master': 85,
@@ -132,26 +135,113 @@ def _calculate_education_score(resume_skills: Dict[str, Any], job_description: s
         'certificate': 30
     }
     
-    base_score = 0
-    for level, score in education_levels.items():
+    # Find candidate's education level
+    candidate_level = None
+    candidate_score = 0
+    for level, score in education_hierarchy.items():
         if re.search(level, education_str):
-            base_score = score
+            candidate_level = level
+            candidate_score = score
             break
     
-    # Field relevance bonus
-    tech_fields = ['computer science', 'software engineering', 'information technology',
-                   'data science', 'computer engineering', 'software development']
-    business_fields = ['business', 'management', 'finance', 'marketing', 'economics']
+    if not candidate_level:
+        return 0.0
     
-    relevance_bonus = 0
+    # Calculate score based on job requirements
+    if required_degree:
+        score = _calculate_degree_match_score(candidate_level, required_degree, education_hierarchy)
+    else:
+        # No specific requirement - use base score
+        score = candidate_score
+    
+    # Field relevance bonus
+    relevance_bonus = _calculate_field_relevance_bonus(education_str, job_description)
+    
+    return min(100.0, score + relevance_bonus)
+
+
+def _extract_required_degree(job_description: str) -> Optional[str]:
+    """Extract required education level from job description"""
     job_desc_lower = job_description.lower()
     
-    if any(field in education_str for field in tech_fields) and any(tech in job_desc_lower for tech in ['software', 'technical', 'developer', 'engineer']):
-        relevance_bonus = 15
-    elif any(field in education_str for field in business_fields) and any(biz in job_desc_lower for biz in ['business', 'management', 'analyst']):
-        relevance_bonus = 10
+    # Look for specific degree requirements
+    degree_patterns = [
+        (r'phd|doctorate|doctoral', 'phd'),
+        (r'master.*degree|m\.?s\.?|master\'s|mba', 'master'),
+        (r'bachelor.*degree|b\.?s\.?|b\.?a\.?|bachelor\'s', 'bachelor'),
+        (r'associate.*degree|associate\'s', 'associate'),
+        (r'diploma', 'diploma'),
+        (r'certificate|certification', 'certificate')
+    ]
     
-    return min(100.0, base_score + relevance_bonus)
+    for pattern, degree in degree_patterns:
+        if re.search(pattern, job_desc_lower):
+            return degree
+    
+    return None
+
+
+def _calculate_degree_match_score(candidate_level: str, required_level: str, hierarchy: Dict[str, int]) -> float:
+    """Calculate score based on candidate's degree vs required degree"""
+    # Get hierarchy positions
+    levels = list(hierarchy.keys())
+    
+    try:
+        candidate_idx = levels.index(candidate_level)
+        required_idx = levels.index(required_level)
+    except ValueError:
+        return hierarchy.get(candidate_level, 0)
+    
+    # Exact match - full score
+    if candidate_level == required_level:
+        return hierarchy[candidate_level]
+    
+    # Higher degree than required - bonus points
+    if candidate_idx < required_idx:  # Higher level (lower index = higher degree)
+        base_score = hierarchy[required_level]
+        excess_levels = required_idx - candidate_idx
+        bonus = min(excess_levels * 10, 20)  # Up to 20 bonus points
+        return min(100.0, base_score + bonus)
+    
+    # Lower degree than required - penalty
+    if candidate_idx > required_idx:
+        deficit_levels = candidate_idx - required_idx
+        penalty = deficit_levels * 15  # 15 points per level deficit
+        return max(0, hierarchy[candidate_level] - penalty)
+    
+    return hierarchy.get(candidate_level, 0)
+
+
+def _calculate_field_relevance_bonus(education_str: str, job_description: str) -> float:
+    """Calculate field of study relevance bonus"""
+    tech_fields = ['computer science', 'software engineering', 'information technology',
+                   'data science', 'computer engineering', 'software development', 'artificial intelligence',
+                   'machine learning', 'cybersecurity', 'cloud computing']
+    business_fields = ['business', 'management', 'finance', 'marketing', 'economics', 'accounting']
+    engineering_fields = ['engineering', 'mechanical', 'electrical', 'civil', 'chemical']
+    
+    job_desc_lower = job_description.lower()
+    
+    # Tech field relevance
+    if any(field in education_str for field in tech_fields):
+        if any(tech in job_desc_lower for tech in ['software', 'technical', 'developer', 'engineer', 'data', 'ai', 'machine learning']):
+            return 15
+        elif any(tech in job_desc_lower for tech in ['it', 'technology', 'system']):
+            return 10
+    
+    # Business field relevance
+    elif any(field in education_str for field in business_fields):
+        if any(biz in job_desc_lower for biz in ['business', 'management', 'analyst', 'strategy']):
+            return 12
+        elif any(biz in job_desc_lower for biz in ['finance', 'marketing']):
+            return 8
+    
+    # Engineering field relevance
+    elif any(field in education_str for field in engineering_fields):
+        if any(eng in job_desc_lower for tech in ['engineer', 'engineering', 'technical']):
+            return 12
+    
+    return 0
 
 
 def _calculate_skills_quality_score(resume_skills: Dict[str, Any], job_description: str) -> float:
