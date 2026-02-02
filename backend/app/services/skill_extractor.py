@@ -5,6 +5,7 @@ from typing import List, Dict, Any, Optional
 from openai import OpenAI
 
 from ..core.config import get_settings
+from ..core.cache_manager import cache_manager, CACHE_CONFIG
 
 logger = logging.getLogger("resume_shortlisting")
 
@@ -14,6 +15,7 @@ class SkillExtractor:
         self.settings = get_settings()
         self.client = OpenAI(api_key=self.settings.openai_api_key)
     
+    @cache_manager.cached(ttl=CACHE_CONFIG['skill_extraction'], key_prefix="skill_extract")
     async def extract_skills_from_resume(self, resume_text: str) -> Dict[str, Any]:
         """Extract skills and other information from resume using OpenAI"""
         
@@ -69,7 +71,8 @@ Return ONLY the JSON object, no additional text."""
             logger.error(f"OpenAI API error: {e}")
             raise ValueError(f"Failed to extract skills: {e}")
     
-    async def extract_required_skills_from_job(self, job_description: str) -> List[str]:
+    @cache_manager.cached(ttl=CACHE_CONFIG['job_descriptions'], key_prefix="job_requirements")
+    async def extract_job_requirements(self, job_description: str) -> List[str]:
         """Extract required skills from job description"""
         
         prompt = f"""Analyze the following job description and extract the required skills and qualifications.
@@ -112,6 +115,7 @@ Return ONLY the JSON object, no additional text."""
             logger.error(f"Failed to extract job requirements: {e}")
             return []
     
+    @cache_manager.cached(ttl=CACHE_CONFIG['openai_responses'], key_prefix="match_evaluation")
     async def evaluate_match(
         self,
         resume_text: str,
