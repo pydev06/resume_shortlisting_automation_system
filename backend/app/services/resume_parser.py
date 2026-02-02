@@ -11,7 +11,6 @@ from ..core.cache_manager import cache_manager, CACHE_CONFIG
 logger = logging.getLogger("resume_shortlisting")
 
 
-@cache_manager.cached(ttl=CACHE_CONFIG['resume_parsing'], key_prefix="pdf_extract")
 def extract_text_from_pdf(file_content: bytes) -> str:
     """Extract text from PDF file"""
     try:
@@ -25,7 +24,6 @@ def extract_text_from_pdf(file_content: bytes) -> str:
         raise ValueError(f"Failed to parse PDF: {e}")
 
 
-@cache_manager.cached(ttl=CACHE_CONFIG['resume_parsing'], key_prefix="docx_extract")
 def extract_text_from_docx(file_content: bytes) -> str:
     """Extract text from DOCX file"""
     try:
