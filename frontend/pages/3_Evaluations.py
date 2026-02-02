@@ -132,12 +132,19 @@ try:
                 st.markdown(format_status_badge(eval_item['status']), unsafe_allow_html=True)
 
             with col4:
-                if eval_item.get('ranking_breakdown'):
-                    composite = eval_item['ranking_breakdown'].get('composite_score')
-                    st.markdown("**Composite Score**", help=COMPOSITE_SCORE_HELP)
-                    st.caption(f"🏆 {composite:.1f}%")
-                else:
-                    st.caption("📊 No ranking data")
+                col4a, col4b = st.columns([1.5, 1])
+                with col4a:
+                    if eval_item.get('ranking_breakdown'):
+                        composite = eval_item['ranking_breakdown'].get('composite_score')
+                        st.markdown("**Composite Score**", help=COMPOSITE_SCORE_HELP)
+                        st.caption(f"🏆 {composite:.1f}%")
+                    else:
+                        st.caption("📊 No ranking data")
+                
+                with col4b:
+                    if st.button("View Details", key=f"view_{eval_item['id']}"):
+                        st.session_state.viewing_eval = eval_item
+                        st.rerun()
 
             st.caption(eval_item['justification'])
             st.markdown("---")
