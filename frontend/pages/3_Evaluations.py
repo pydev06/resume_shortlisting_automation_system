@@ -156,7 +156,11 @@ try:
     # -----------------------
     # Detailed view
     # -----------------------
-    if "viewing_eval" in st.session_state and st.session_state.viewing_eval is not None:
+    if ("viewing_eval" in st.session_state and 
+        st.session_state.viewing_eval is not None and 
+        isinstance(st.session_state.viewing_eval, dict) and 
+        'match_score' in st.session_state.viewing_eval):
+        
         eval_item = st.session_state.viewing_eval
 
         st.markdown(f"## 📋 Detailed Evaluation")
