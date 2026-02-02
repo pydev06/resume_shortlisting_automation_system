@@ -96,6 +96,13 @@ def format_status_badge(status: str) -> str:
 
 st.markdown('<p class="main-header">📊 Resume Evaluations</p>', unsafe_allow_html=True)
 
+# Clear invalid viewing_eval from session state
+if ("viewing_eval" in st.session_state and 
+    (st.session_state.viewing_eval is None or 
+     not isinstance(st.session_state.viewing_eval, dict) or 
+     'match_score' not in st.session_state.viewing_eval)):
+    del st.session_state.viewing_eval
+
 try:
     jobs_data = api_client.list_jobs(page_size=100)
     jobs = jobs_data.get("jobs", [])
