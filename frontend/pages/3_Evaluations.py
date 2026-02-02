@@ -113,7 +113,130 @@ try:
 
     st.markdown("---")
 
-    evals_data = api_client.list_evaluations(selected_job['job_id'])
+    # Summary metrics
+    try:
+        summary = api_client.get_evaluation_summary(selected_job['job_id'])
+        
+        col1, col2, col3, col4, col5 = st.columns(5)
+        with col1:
+            st.metric("Total Resumes", summary['total_resumes'])
+        with col2:
+            st.metric("Evaluated", summary['evaluated'])
+        with col3:
+            st.metric("OK to Proceed", summary['ok_to_proceed'])
+        with col4:
+            st.metric("Not OK", summary['not_ok'])
+        with col5:
+            st.metric("Avg Score", f"{summary['average_score']:.1f}%")
+            
+    except Exception as e:
+        st.warning(f"Could not load summary: {e}")
+    
+    st.markdown("---")
+    
+    # Filters
+    st.markdown("### Filters")
+    with st.expander("Filter Options", expanded=True):
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            status_filter = st.selectbox(
+                "Status",
+                ["All", "OK to Proceed", "Not OK", "Pending"]
+            )
+        with col2:
+            min_score = st.number_input("Min Score", 0, 100, 0)
+        with col3:
+            max_score = st.number_input("Max Score", 0, 100, 100)
+        with col4:
+            sort_order = st.selectbox("Sort", ["Highest Score", "Lowest Score", "Recent", "Experience (High to Low)", "Experience (Low to High)", "Composite Score (High to Low)", "Composite Score (Low to High)"])
+        
+        col5, col6, col7, col8 = st.columns(4)
+        with col5:
+            min_experience = st.number_input("Min Experience (years)", 0.0, 50.0, 0.0, 0.5)
+        with col6:
+            max_experience = st.number_input("Max Experience (years)", 0.0, 50.0, 50.0, 0.5)
+        with col7:
+            skills_keyword = st.text_input("Skills Keyword", placeholder="e.g., Python")
+        with col8:
+            education_keyword = st.text_input("Education Keyword", placeholder="e.g., Computer Science")
+    
+    # Map sort options
+    sort_by = "match_score"
+    sort_dir = "desc"
+    if sort_order == "Lowest Score":
+        sort_dir = "asc"
+    elif sort_order == "Recent":
+        sort_by = "evaluated_at"
+    elif sort_order == "Experience (High to Low)":
+        sort_by = "experience_years"
+        sort_dir = "desc"
+    elif sort_order == "Experience (Low to High)":
+        sort_by = "experience_years"
+        sort_dir = "asc"
+    elif sort_order == "Composite Score (High to Low)":
+        sort_by = "composite_score"
+        sort_dir = "desc"
+    elif sort_order == "Composite Score (Low to High)":
+        sort_by = "composite_score"
+        sort_dir = "asc"
+    
+    # Evaluate button
+    col1, col2 = st.columns([1, 3])
+
+    with col1:
+        if st.button("🔄 Evaluate All Resumes", type="primary", use_container_width=True):
+            with st.spinner("Evaluating resumes... This may take a while."):
+                try:
+                    results = api_client.evaluate_all_resumes(selected_job['job_id'])
+                    st.success(f"✅ Evaluated {len(results)} resumes")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Evaluation failed: {e}")
+    
+    # Export to CSV
+    with col2:
+        if st.button("📊 Export to CSV", use_container_width=True):
+            try:
+                status_param = None if status_filter == "All" else status_filter
+                csv_data = api_client.export_evaluations_csv(selected_job['job_id'], {
+                    'status': status_param,
+                    'min_score': min_score if min_score > 0 else None,
+                    'max_score': max_score if max_score < 100 else None,
+                    'min_experience': min_experience if min_experience > 0 else None,
+                    'max_experience': max_experience if max_experience < 50 else None,
+                    'skills_keyword': skills_keyword,
+                    'education_keyword': education_keyword,
+                    'sort_by': sort_by,
+                    'sort_order': sort_dir
+                })
+                st.session_state.export_csv = True
+                st.session_state.csv_data = csv_data
+                st.success("CSV generated! Download below.")
+            except Exception as e:
+                st.error(f"Export failed: {e}")
+            
+        if st.session_state.get('export_csv') and st.session_state.get('csv_data'):
+            st.download_button(
+                label="📥 Download CSV",
+                data=st.session_state.csv_data,
+                file_name=f"evaluations_{selected_job['job_id']}.csv",
+                mime="text/csv",
+                use_container_width=True,
+                key="download_csv"
+            )
+    
+    st.markdown("---")
+    
+    # List evaluations with filters
+    status_param = None if status_filter == "All" else status_filter
+    evals_data = api_client.list_evaluations(
+        selected_job['job_id'],
+        status=status_param,
+        min_score=min_score if min_score > 0 else None,
+        max_score=max_score if max_score < 100 else None,
+        sort_by=sort_by,
+        sort_order=sort_dir
+    )
     evaluations = evals_data.get("evaluations", []) if evals_data else []
     evaluations = [e for e in evaluations if e is not None]  # Filter out None items
 
