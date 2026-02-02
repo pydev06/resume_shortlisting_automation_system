@@ -241,20 +241,30 @@ try:
             else:
                 for eval_item in evaluations:
                     with st.container():
-                        col1, col2, col3, col4 = st.columns([3, 1, 1, 2])
-                        
+                        col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
+                    
                         with col1:
-                            st.markdown(f"**{eval_item.get('candidate_name') or eval_item['file_name']}**")
+                            st.markdown(f"**{eval_item.get('candidate_name', eval_item['file_name'])}**")
                             st.caption(f"📄 {eval_item['file_name']}")
-                        
+                    
                         with col2:
                             score = eval_item['match_score']
                             score_class = get_score_class(score)
                             st.markdown(f'<span class="{score_class}">{score:.0f}%</span>', unsafe_allow_html=True)
-                        
+                            with st.expander("ℹ️ Score Info", expanded=False):
+                                st.markdown("""
+                                **Match Score**: AI-powered overall compatibility assessment
+                                
+                                **Composite Score**: Detailed breakdown for tie-breaking
+                                - Experience Score: Years of experience vs requirements
+                                - Education Score: Degree level and field relevance  
+                                - Skills Quality: High-value skills percentage
+                                - Keyword Density: Job description keyword matching
+                                """)
+                    
                         with col3:
                             st.markdown(format_status_badge(eval_item['status']), unsafe_allow_html=True)
-                        
+                    
                         with col4:
                             col4a, col4b = st.columns([1, 1])
                             with col4a:
@@ -303,6 +313,19 @@ try:
                             st.markdown(f"**🎓 Education Score:** {rb.get('education_score', 0):.1f}%")
                             st.markdown(f"**⚡ Skills Quality:** {rb.get('skills_quality_score', 0):.1f}%")
                             st.markdown(f"**🔍 Keyword Density:** {rb.get('keyword_density_score', 0):.1f}%")
+                            
+                            with st.expander("ℹ️ What do these scores mean?", expanded=False):
+                                st.markdown("""
+                                **🏆 Composite Score**: Weighted combination of all factors for tie-breaking
+                                
+                                **💼 Experience Score**: Years of experience vs job requirements
+                                
+                                **🎓 Education Score**: Degree level and field relevance to job
+                                
+                                **⚡ Skills Quality**: Percentage of high-value/advanced skills
+                                
+                                **🔍 Keyword Density**: How well resume matches job description keywords
+                                """)
                     
                     with col2:
                         st.markdown("### Experience")
