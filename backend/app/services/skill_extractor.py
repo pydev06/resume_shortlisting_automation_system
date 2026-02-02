@@ -24,23 +24,29 @@ class SkillExtractor:
 Resume Text:
 {resume_text[:8000]}
 
-Return a JSON object with the following structure:
+IMPORTANT: Pay special attention to the EDUCATION section. Look for degree information like:
+- Bachelor, Master, PhD, B.Tech, M.Tech, MBA, etc.
+- Field of study (Computer Science, Engineering, etc.)
+- If you find integrated programs, report them as the highest degree achieved
+
+Return a JSON object with the following EXACT structure:
 {{
     "skills": ["list of technical and soft skills found"],
     "experience_years": <number or null if not found>,
-    "education": "highest education level and field",
+    "education": "highest education level and field (e.g., 'Master of Technology in Computer Science')",
     "previous_roles": ["list of job titles/roles"],
     "keywords": ["relevant industry keywords"]
 }}
 
 Be thorough in extracting skills - include programming languages, frameworks, tools, methodologies, and soft skills.
+If education is not found, set it to null, but try hard to find it.
 Return ONLY the JSON object, no additional text."""
 
         try:
             response = self.client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": "You are an expert HR assistant that extracts structured information from resumes. Always respond with valid JSON only."},
+                    {"role": "system", "content": "You are an expert HR assistant that extracts structured information from resumes. Always respond with valid JSON only. Be especially careful to extract education information accurately."},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.1,
@@ -56,20 +62,71 @@ Return ONLY the JSON object, no additional text."""
                     result_text = result_text[4:]
                 result_text = result_text.strip()
             
-            return json.loads(result_text)
+            result = json.loads(result_text)
+            
+            # Fallback education extraction if OpenAI missed it
+            if not result.get('education'):
+                result['education'] = self._extract_education_fallback(resume_text)
+            
+            return result
             
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse OpenAI response as JSON: {e}")
+            # Try fallback extraction
             return {
                 "skills": [],
                 "experience_years": None,
-                "education": None,
+                "education": self._extract_education_fallback(resume_text),
                 "previous_roles": [],
                 "keywords": []
             }
         except Exception as e:
             logger.error(f"OpenAI API error: {e}")
             raise ValueError(f"Failed to extract skills: {e}")
+    
+    def _extract_education_fallback(self, resume_text: str) -> Optional[str]:
+        """Fallback method to extract education using regex patterns"""
+        import re
+        
+        text_lower = resume_text.lower()
+        
+        # Look for integrated B.Tech + M.Tech programs first
+        integrated_btech_mtech = re.search(r'integrated.*b\.?tech.*m\.?tech.*?(?:in|\()(\w+(?:\s+\w+)*)', resume_text, re.IGNORECASE)
+        if integrated_btech_mtech:
+            field = integrated_btech_mtech.group(1).strip()
+            return f"Master of Technology in {field}"
+        
+        # Look for common degree patterns
+        degree_patterns = [
+            (r'\b(m\.?tech|m\.?s\.?|master.*technology|master.*science)\b.*?(\w+(?:\s+\w+)*)', 'Master of Technology in {}'),
+            (r'\b(b\.?tech|b\.?s\.?|bachelor.*technology|bachelor.*science)\b.*?(\w+(?:\s+\w+)*)', 'Bachelor of Technology in {}'),
+            (r'\b(phd|doctorate|doctoral)\b.*?(\w+(?:\s+\w+)*)', 'PhD in {}'),
+            (r'\b(mba|master.*business)\b.*?(\w+(?:\s+\w+)*)', 'MBA in {}'),
+            (r'\b(b\.?a\.?|bachelor.*arts)\b.*?(\w+(?:\s+\w+)*)', 'Bachelor of Arts in {}')
+        ]
+        
+        for pattern, template in degree_patterns:
+            match = re.search(pattern, text_lower, re.IGNORECASE)
+            if match:
+                degree = match.group(1).strip()
+                field = match.group(2).strip() if len(match.groups()) > 1 else ""
+                if field:
+                    return template.format(field)
+                return degree
+        
+        # Look for other integrated programs
+        integrated_patterns = [
+            r'dual.*degree.*(\w+(?:\s+\w+)*)',
+            r'integrated.*program.*?(\w+(?:\s+\w+)*)'
+        ]
+        
+        for pattern in integrated_patterns:
+            match = re.search(pattern, text_lower, re.IGNORECASE)
+            if match:
+                field = match.group(1).strip()
+                return f"Master's in {field}"
+        
+        return None
     
     @cache_manager.cached(ttl=CACHE_CONFIG['job_descriptions'], key_prefix="job_requirements")
     async def extract_job_requirements(self, job_description: str) -> List[str]:
