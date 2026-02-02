@@ -107,26 +107,30 @@ try:
     st.markdown("---")
 
     evals_data = api_client.list_evaluations(selected_job['job_id'])
-    evaluations = evals_data.get("evaluations", [])
+    evaluations = evals_data.get("evaluations", []) if evals_data else []
+    evaluations = [e for e in evaluations if e is not None]  # Filter out None items
 
     st.markdown(f"### Results ({len(evaluations)} candidates)")
 
-    for eval_item in evaluations:
-        with st.container():
-            col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
+    if not evaluations:
+        st.info("No evaluations found. Click 'Evaluate All Resumes' to start.")
+    else:
+        for eval_item in evaluations:
+            with st.container():
+                col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
 
-            with col1:
-                st.markdown(f"**{eval_item.get('candidate_name', eval_item['file_name'])}**")
-                st.caption(f"📄 {eval_item['file_name']}")
+                with col1:
+                    st.markdown(f"**{eval_item.get('candidate_name', eval_item['file_name'])}**")
+                    st.caption(f"📄 {eval_item['file_name']}")
 
-            with col2:
-                st.markdown("**Match Score**", help=MATCH_SCORE_HELP)
-                score = eval_item['match_score']
-                score_class = get_score_class(score)
-                st.markdown(
-                    f'<span class="{score_class}">{score:.0f}%</span>',
-                    unsafe_allow_html=True
-                )
+                with col2:
+                    st.markdown("**Match Score**", help=MATCH_SCORE_HELP)
+                    score = eval_item['match_score']
+                    score_class = get_score_class(score)
+                    st.markdown(
+                        f'<span class="{score_class}">{score:.0f}%</span>',
+                        unsafe_allow_html=True
+                    )
 
             with col3:
                 st.markdown(format_status_badge(eval_item['status']), unsafe_allow_html=True)
@@ -152,7 +156,7 @@ try:
     # -----------------------
     # Detailed view
     # -----------------------
-    if "viewing_eval" in st.session_state:
+    if "viewing_eval" in st.session_state and st.session_state.viewing_eval is not None:
         eval_item = st.session_state.viewing_eval
 
         st.markdown(f"## 📋 Detailed Evaluation")
