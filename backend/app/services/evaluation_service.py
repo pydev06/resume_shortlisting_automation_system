@@ -115,21 +115,18 @@ def _calculate_education_score(resume_skills: Dict[str, Any], job_description: s
     if not education:
         return 0.0
     
-    education_str = str(education).lower()
-    
-    # Extract education requirements from job description
-    required_degree = _extract_required_degree(job_description)
-    
     # Education level hierarchy (higher to lower)
     education_hierarchy = {
         'phd': 100,
         'doctorate': 100,
         'master': 85,
-        'm\.?s\.?': 85,
+        'm\.?\s*tech': 85,  # M.Tech, M Tech
+        'm\.?s\.?': 85,     # MS, M.S., MSc
         'mba': 85,
         'bachelor': 70,
-        'b\.?s\.?': 70,
-        'b\.?a\.?': 65,
+        'b\.?\s*tech': 70,  # B.Tech, B Tech
+        'b\.?s\.?': 70,     # BS, B.S., BSc
+        'b\.?a\.?': 65,     # BA, B.A.
         'associate': 50,
         'diploma': 40,
         'certificate': 30
