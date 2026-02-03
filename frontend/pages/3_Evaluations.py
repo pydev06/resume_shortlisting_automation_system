@@ -293,7 +293,7 @@ try:
         
         eval_item = st.session_state.viewing_eval
 
-        st.markdown(f"## 📋 Detailed Evaluation")
+        st.markdown(f"## 📋 Detailed Evaluation: {eval_item.get('candidate_name', eval_item['file_name'])}")
 
         col1, col2 = st.columns(2)
 
@@ -319,6 +319,30 @@ try:
 
             st.markdown("### Education")
             st.write(eval_item.get('education', "Not specified"))
+
+            st.markdown("### Skills Extracted")
+            skills = eval_item.get('skills_extracted', [])
+            if skills:
+                st.write(", ".join(skills))
+            else:
+                st.write("No skills extracted")
+
+            st.markdown("### Previous Roles")
+            roles = eval_item.get('previous_roles', [])
+            if roles:
+                for role in roles:
+                    st.write(f"• {role}")
+            else:
+                st.write("Not specified")
+
+        st.markdown("### 📝 Justification")
+        st.write(eval_item.get('justification', 'No justification provided'))
+
+        if eval_item.get('skills_matched'):
+            st.markdown("### Skills Match Details")
+            for skill_match in eval_item['skills_matched']:
+                matched_icon = "✅" if skill_match['matched'] else "❌"
+                st.write(f"{matched_icon} {skill_match['skill']} (Relevance: {skill_match['relevance_score']:.1f})")
 
         if st.button("Close Details"):
             st.session_state.viewing_eval = None
